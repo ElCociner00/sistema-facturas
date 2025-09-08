@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Facturas - Conectado</title>
+    <title>Sistema de Facturas - Agrupado</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -24,7 +24,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -91,50 +91,6 @@
             transform: translateY(-2px);
         }
         
-        .btn-success {
-            background: var(--color-success);
-        }
-        
-        .btn-success:hover {
-            background: #219653;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            background: white;
-        }
-        
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        th {
-            background-color: var(--color-primary);
-            color: white;
-            position: sticky;
-            top: 0;
-        }
-        
-        tr:hover {
-            background-color: #f5f5f5;
-        }
-        
-        .estado {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-        
-        .pagada { background: #e8f5e9; color: var(--color-success); }
-        .pendiente { background: #fff3e0; color: var(--color-warning); }
-        .vencida { background: #ffebee; color: var(--color-danger); }
-        
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -161,38 +117,95 @@
             color: #666;
             font-size: 0.9rem;
         }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: var(--color-primary);
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr.factura-header {
+            background-color: #e8f4f8;
+            cursor: pointer;
+        }
+        
+        tr.factura-header:hover {
+            background-color: #d4e8f1;
+        }
+        
+        tr.factura-detail {
+            display: none;
+            background-color: #f9f9f9;
+        }
+        
+        tr.factura-detail.show {
+            display: table-row;
+        }
+        
+        .toggle-details {
+            cursor: pointer;
+            color: var(--color-secondary);
+        }
+        
+        .estado {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .pagada { background: #e8f5e9; color: var(--color-success); }
+        .pendiente { background: #fff3e0; color: var(--color-warning); }
+        .vencida { background: #ffebee; color: var(--color-danger); }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1><i class="fas fa-file-invoice-dollar"></i> Sistema de Facturas</h1>
-            <p>Conectado directamente a Google Sheets</p>
+            <p>Facturas agrupadas correctamente</p>
         </header>
         
         <div id="status" class="status loading">
-            <i class="fas fa-spinner fa-spin"></i> Conectando con Google Sheets...
+            <i class="fas fa-spinner fa-spin"></i> Cargando y agrupando facturas...
         </div>
         
         <div style="text-align: center;">
             <button class="btn" onclick="cargarFacturas()">
                 <i class="fas fa-sync-alt"></i> Actualizar Datos
             </button>
-            
-            <button class="btn btn-success" onclick="abrirGoogleSheets()">
-                <i class="fas fa-external-link-alt"></i> Abrir Google Sheets
-            </button>
         </div>
         
         <div class="stats">
             <div class="stat-card">
-                <div class="stat-number" id="total-facturado">$0</div>
-                <div class="stat-label">Total Facturado</div>
+                <div class="stat-number" id="total-facturas">0</div>
+                <div class="stat-label">Total Facturas</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-number" id="total-facturas">0</div>
-                <div class="stat-label">Total Facturas</div>
+                <div class="stat-number" id="total-facturado">$0</div>
+                <div class="stat-label">Total Facturado</div>
             </div>
             
             <div class="stat-card">
@@ -210,81 +223,144 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Número</th>
+                        <th>Factura</th>
+                        <th>Proveedor</th>
                         <th>Fecha</th>
-                        <th>Cliente</th>
-                        <th>Descripción</th>
-                        <th>Monto</th>
+                        <th>Total</th>
                         <th>Estado</th>
-                        <th>Vencimiento</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="facturas-body">
-                    <!-- Los datos se cargarán aquí -->
+                    <!-- Las facturas agrupadas se cargarán aquí -->
                 </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // URL de TU Google Sheets (pública)
+        // URL de TU Google Sheets
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRBrazhlZ91OI-rcjqCCefnYmrOKm-pnqVqTGYhl1r_VnjS3u1PzdhnMT2GEKo0QPMXxXY84hcb_Eno/pub?output=csv';
         
-        // Función para cargar facturas desde Google Sheets
+        // Función para cargar y agrupar facturas
         async function cargarFacturas() {
-            actualizarEstado('loading', 'Conectando con Google Sheets...');
+            actualizarEstado('loading', 'Cargando y agrupando facturas...');
             
             try {
                 const response = await fetch(SHEET_URL);
                 if (!response.ok) throw new Error('Error al cargar los datos');
                 
                 const csvData = await response.text();
-                const facturas = parsearCSV(csvData);
+                const filas = parsearCSV(csvData);
                 
-                mostrarFacturas(facturas);
-                actualizarEstadisticas(facturas);
-                actualizarEstado('success', `Datos cargados correctamente (${facturas.length} facturas)`);
+                // Agrupar por número de factura
+                const facturasAgrupadas = agruparPorFactura(filas);
+                
+                mostrarFacturasAgrupadas(facturasAgrupadas);
+                actualizarEstadisticas(facturasAgrupadas);
+                actualizarEstado('success', `Datos cargados correctamente (${facturasAgrupadas.length} facturas)`);
                 
             } catch (error) {
                 console.error('Error:', error);
-                actualizarEstado('error', 'Error al conectar con Google Sheets. Verifica la conexión.');
+                actualizarEstado('error', 'Error al cargar los datos. Verifica la conexión.');
             }
         }
         
         // Función para parsear CSV
         function parsearCSV(csv) {
             const lineas = csv.split('\n');
-            const facturas = [];
+            const filas = [];
             
             // Empezar desde 1 para saltar los encabezados
             for (let i = 1; i < lineas.length; i++) {
-                const cells = lineas[i].split(',');
-                if (cells.length >= 7) {
-                    facturas.push({
-                        numero: cells[0]?.trim() || '',
-                        fecha: cells[1]?.trim() || '',
-                        cliente: cells[2]?.trim() || '',
-                        descripcion: cells[3]?.trim() || '',
-                        monto: parseFloat(cells[4]?.trim()) || 0,
-                        estado: (cells[5]?.trim() || 'pendiente').toLowerCase(),
-                        vencimiento: cells[6]?.trim() || ''
-                    });
+                // Manejar comas dentro de campos entre comillas
+                const regex = /(".*?"|[^",]+)(?=\s*,|\s*$)/g;
+                const cells = lineas[i].match(regex) || [];
+                
+                if (cells.length >= 15) { // Asegurar que tenemos suficientes columnas
+                    const fila = {
+                        factura: cells[0]?.replace(/"/g, '').trim() || '',
+                        proveedor: cells[1]?.replace(/"/g, '').trim() || '',
+                        nit: cells[2]?.replace(/"/g, '').trim() || '',
+                        direccion: cells[3]?.replace(/"/g, '').trim() || '',
+                        telefono: cells[4]?.replace(/"/g, '').trim() || '',
+                        email: cells[5]?.replace(/"/g, '').trim() || '',
+                        producto: cells[6]?.replace(/"/g, '').trim() || '',
+                        valorUnitario: parseFloat(cells[7]?.replace(/"/g, '').replace(',', '.')) || 0,
+                        cantidad: parseFloat(cells[8]?.replace(/"/g, '').replace(',', '.')) || 0,
+                        subtotal: parseFloat(cells[9]?.replace(/"/g, '').replace(',', '.')) || 0,
+                        totalFactura: parseFloat(cells[10]?.replace(/"/g, '').replace(',', '.')) || 0,
+                        porcentajeIVA: parseFloat(cells[11]?.replace(/"/g, '').replace(',', '.')) || 0,
+                        codigoContable: cells[12]?.replace(/"/g, '').trim() || '',
+                        valorDebito: parseFloat(cells[13]?.replace(/"/g, '').replace(',', '.')) || 0,
+                        valorCredito: parseFloat(cells[14]?.replace(/"/g, '').replace(',', '.')) || 0,
+                        descripcion: cells[15]?.replace(/"/g, '').trim() || ''
+                    };
+                    
+                    if (fila.factura) { // Solo agregar filas con número de factura
+                        filas.push(fila);
+                    }
                 }
             }
             
-            return facturas.filter(f => f.numero); // Filtrar filas vacías
+            return filas;
         }
         
-        // Función para mostrar facturas en la tabla
-        function mostrarFacturas(facturas) {
+        // Función para agrupar por número de factura
+        function agruparPorFactura(filas) {
+            const facturasMap = new Map();
+            
+            filas.forEach(fila => {
+                if (!facturasMap.has(fila.factura)) {
+                    facturasMap.set(fila.factura, {
+                        numero: fila.factura,
+                        proveedor: fila.proveedor,
+                        nit: fila.nit,
+                        direccion: fila.direccion,
+                        telefono: fila.telefono,
+                        email: fila.email,
+                        total: fila.totalFactura,
+                        items: [],
+                        estado: determinarEstado(fila)
+                    });
+                }
+                
+                // Agregar item a la factura
+                const factura = facturasMap.get(fila.factura);
+                factura.items.push({
+                    producto: fila.producto,
+                    valorUnitario: fila.valorUnitario,
+                    cantidad: fila.cantidad,
+                    subtotal: fila.subtotal,
+                    descripcion: fila.descripcion
+                });
+                
+                // Actualizar total si es necesario
+                if (fila.totalFactura > factura.total) {
+                    factura.total = fila.totalFactura;
+                }
+            });
+            
+            return Array.from(facturasMap.values());
+        }
+        
+        // Función para determinar el estado de la factura
+        function determinarEstado(fila) {
+            if (fila.valorCredito > 0) return 'pagada';
+            if (fila.descripcion?.toLowerCase().includes('crédito')) return 'pagada';
+            return 'pendiente';
+        }
+        
+        // Función para mostrar facturas agrupadas
+        function mostrarFacturasAgrupadas(facturas) {
             const tbody = document.getElementById('facturas-body');
             tbody.innerHTML = '';
             
             if (facturas.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 2rem; color: #666;">
-                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+                            <i class="fas fa-inbox"></i>
                             <p>No se encontraron facturas</p>
                         </td>
                     </tr>
@@ -293,44 +369,97 @@
             }
             
             facturas.forEach(factura => {
-                const fila = document.createElement('tr');
-                
-                fila.innerHTML = `
-                    <td>${factura.numero}</td>
-                    <td>${formatearFecha(factura.fecha)}</td>
-                    <td>${factura.cliente}</td>
-                    <td>${factura.descripcion}</td>
-                    <td>${formatearMoneda(factura.monto)}</td>
+                // Fila principal de la factura
+                const filaPrincipal = document.createElement('tr');
+                filaPrincipal.className = 'factura-header';
+                filaPrincipal.innerHTML = `
+                    <td><strong>${factura.numero}</strong></td>
+                    <td>${factura.proveedor}</td>
+                    <td>${obtenerFechaFactura(factura)}</td>
+                    <td>${formatearMoneda(factura.total)}</td>
                     <td><span class="estado ${factura.estado}">${factura.estado.toUpperCase()}</span></td>
-                    <td>${formatearFecha(factura.vencimiento)}</td>
+                    <td>
+                        <span class="toggle-details" onclick="toggleDetalles('${factura.numero}')">
+                            <i class="fas fa-chevron-down"></i> Ver detalles (${factura.items.length} items)
+                        </span>
+                    </td>
                 `;
+                tbody.appendChild(filaPrincipal);
                 
-                tbody.appendChild(fila);
+                // Fila de detalles (inicialmente oculta)
+                const filaDetalles = document.createElement('tr');
+                filaDetalles.className = 'factura-detail';
+                filaDetalles.id = `detalle-${factura.numero}`;
+                filaDetalles.innerHTML = `
+                    <td colspan="6">
+                        <div style="padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                            <h4 style="margin-top: 0;">Detalles de la factura ${factura.numero}</h4>
+                            <p><strong>Proveedor:</strong> ${factura.proveedor} | NIT: ${factura.nit}</p>
+                            <p><strong>Contacto:</strong> ${factura.telefono} | ${factura.email}</p>
+                            <p><strong>Dirección:</strong> ${factura.direccion}</p>
+                            
+                            <table style="width: 100%; margin-top: 15px;">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Cantidad</th>
+                                        <th>Valor Unitario</th>
+                                        <th>Subtotal</th>
+                                        <th>Descripción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${factura.items.map(item => `
+                                        <tr>
+                                            <td>${item.producto}</td>
+                                            <td>${item.cantidad}</td>
+                                            <td>${formatearMoneda(item.valorUnitario)}</td>
+                                            <td>${formatearMoneda(item.subtotal)}</td>
+                                            <td>${item.descripcion}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(filaDetalles);
             });
+        }
+        
+        // Función para obtener fecha de la factura (puedes ajustar según tus datos)
+        function obtenerFechaFactura(factura) {
+            // Aquí puedes implementar lógica para extraer la fecha si está disponible
+            return 'Fecha no disponible';
         }
         
         // Función para actualizar estadísticas
         function actualizarEstadisticas(facturas) {
-            const totalFacturado = facturas.reduce((sum, f) => sum + f.monto, 0);
+            const totalFacturado = facturas.reduce((sum, f) => sum + f.total, 0);
             const pendientes = facturas.filter(f => f.estado === 'pendiente').length;
             const pagadas = facturas.filter(f => f.estado === 'pagada').length;
             
-            document.getElementById('total-facturado').textContent = formatearMoneda(totalFacturado);
             document.getElementById('total-facturas').textContent = facturas.length;
+            document.getElementById('total-facturado').textContent = formatearMoneda(totalFacturado);
             document.getElementById('facturas-pendientes').textContent = pendientes;
             document.getElementById('facturas-pagadas').textContent = pagadas;
         }
         
-        // Funciones de utilidad
-        function formatearFecha(fechaStr) {
-            if (!fechaStr) return '-';
-            return fechaStr;
+        // Función para toggle detalles
+        function toggleDetalles(numeroFactura) {
+            const detalle = document.getElementById(`detalle-${numeroFactura}`);
+            const icono = document.querySelector(`#detalle-${numeroFactura}`).previousElementSibling.querySelector('i');
+            
+            detalle.classList.toggle('show');
+            icono.classList.toggle('fa-chevron-down');
+            icono.classList.toggle('fa-chevron-up');
         }
         
+        // Funciones de utilidad
         function formatearMoneda(monto) {
-            return new Intl.NumberFormat('es-ES', {
+            return new Intl.NumberFormat('es-CO', {
                 style: 'currency',
-                currency: 'USD'
+                currency: 'COP'
             }).format(monto);
         }
         
@@ -340,10 +469,6 @@
             status.innerHTML = tipo === 'loading' 
                 ? `<i class="fas fa-spinner fa-spin"></i> ${mensaje}`
                 : mensaje;
-        }
-        
-        function abrirGoogleSheets() {
-            window.open('https://docs.google.com/spreadsheets/d/14_cm-zk1qrzE3K8pfvRamHGAi-uD8HH9bd8BMdFpZoM/edit', '_blank');
         }
         
         // Cargar datos al iniciar
