@@ -3,359 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Facturas - Conectado a Google Sheets</title>
+    <title>Sistema de Facturas - Conectado</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --color-primary: #2c3e50;
             --color-secondary: #3498db;
-            --color-accent: #e74c3c;
-            --color-light: #ecf0f1;
             --color-success: #27ae60;
             --color-warning: #f39c12;
-            --color-dark: #2c3e50;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --color-danger: #e74c3c;
         }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 20px;
             color: #333;
             line-height: 1.6;
-            min-height: 100vh;
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
         
         header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
             background: linear-gradient(135deg, var(--color-primary) 0%, #34495e 100%);
             color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-            text-align: center;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            transform: rotate(30deg);
+            border-radius: 10px;
         }
         
         h1 {
-            font-size: 2.8rem;
-            margin-bottom: 0.5rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin: 0;
+            font-size: 2.5rem;
         }
         
-        .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            margin-bottom: 1rem;
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
         }
         
-        .connection-status {
+        .status.success {
+            background: #e8f5e9;
+            color: var(--color-success);
+            border: 1px solid #c8e6c9;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            color: var(--color-danger);
+            border: 1px solid #ffcdd2;
+        }
+        
+        .status.loading {
+            background: #e3f2fd;
+            color: var(--color-secondary);
+            border: 1px solid #bbdefb;
+        }
+        
+        .btn {
+            background: var(--color-secondary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s;
             display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-        }
-        
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: var(--color-success);
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
-        }
-        
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .last-update {
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .filters {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .filter-group label {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--color-primary);
-            display: flex;
             align-items: center;
             gap: 8px;
         }
         
-        select, input {
-            padding: 0.9rem;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s;
-            background: #f9f9f9;
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
         }
         
-        select:focus, input:focus {
-            outline: none;
-            border-color: var(--color-secondary);
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        .btn-success {
+            background: var(--color-success);
         }
         
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 1.8rem;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            text-align: center;
-            transition: transform 0.3s;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .stat-number {
-            font-size: 2.3rem;
-            font-weight: bold;
-            color: var(--color-secondary);
-            margin-bottom: 0.5rem;
-        }
-        
-        .stat-label {
-            color: #666;
-            font-size: 0.95rem;
-        }
-        
-        .table-container {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            margin-bottom: 2rem;
-            overflow-x: auto;
+        .btn-success:hover {
+            background: #219653;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 900px;
+            margin: 20px 0;
+            background: white;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
         }
         
         th {
             background-color: var(--color-primary);
             color: white;
-            padding: 1.2rem;
-            text-align: left;
-            font-weight: 600;
             position: sticky;
             top: 0;
         }
         
-        td {
-            padding: 1.2rem;
-            border-bottom: 1px solid #eee;
-        }
-        
         tr:hover {
-            background-color: #f8f9fa;
+            background-color: #f5f5f5;
         }
         
         .estado {
-            padding: 0.4rem 0.9rem;
+            padding: 6px 12px;
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 600;
             display: inline-block;
         }
         
-        .pagada {
-            background-color: #e8f5e9;
-            color: var(--color-success);
-        }
+        .pagada { background: #e8f5e9; color: var(--color-success); }
+        .pendiente { background: #fff3e0; color: var(--color-warning); }
+        .vencida { background: #ffebee; color: var(--color-danger); }
         
-        .pendiente {
-            background-color: #ffecb3;
-            color: var(--color-warning);
-        }
-        
-        .vencida {
-            background-color: #ffcdd2;
-            color: var(--color-accent);
-        }
-        
-        .acciones {
-            display: flex;
-            gap: 0.7rem;
-        }
-        
-        .btn {
-            padding: 0.6rem 1.2rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .btn-primary {
-            background-color: var(--color-secondary);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
-        }
-        
-        .btn-secondary {
-            background-color: var(--color-light);
-            color: var(--color-primary);
-        }
-        
-        .btn-secondary:hover {
-            background-color: #dde4e6;
-            transform: translateY(-2px);
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 3rem;
-            color: #666;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(52, 152, 219, 0.2);
-            border-top: 5px solid var(--color-secondary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 0.7rem;
-            margin-top: 1.5rem;
-        }
-        
-        .page-btn {
-            padding: 0.7rem 1.2rem;
-            border: 1px solid #ddd;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .page-btn:hover {
-            background-color: #f0f0f0;
-        }
-        
-        .page-btn.active {
-            background-color: var(--color-secondary);
-            color: white;
-            border-color: var(--color-secondary);
-        }
-        
-        .error-message {
-            background: #ffebee;
-            color: #c62828;
-            padding: 1.5rem;
-            border-radius: 10px;
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
             margin: 20px 0;
-            text-align: center;
-            display: none;
         }
         
-        @media (max-width: 768px) {
-            .filters {
-                grid-template-columns: 1fr;
-            }
-            
-            .controls {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            th, td {
-                padding: 0.8rem;
-            }
-            
-            .acciones {
-                flex-direction: column;
-            }
-            
-            h1 {
-                font-size: 2.2rem;
-            }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--color-secondary);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -363,214 +167,114 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-file-invoice-dollar"></i> Sistema de Facturas</h1>
-            <p class="subtitle">Conectado directamente a tu Google Sheets</p>
-            <div class="connection-status">
-                <div class="status-dot"></div>
-                <span>Conectado a Google Sheets</span>
-            </div>
+            <p>Conectado directamente a Google Sheets</p>
         </header>
         
-        <div class="controls">
-            <div class="last-update" id="last-update">
-                Última actualización: --
-            </div>
-            <button class="btn btn-primary" onclick="cargarFacturas()">
+        <div id="status" class="status loading">
+            <i class="fas fa-spinner fa-spin"></i> Conectando con Google Sheets...
+        </div>
+        
+        <div style="text-align: center;">
+            <button class="btn" onclick="cargarFacturas()">
                 <i class="fas fa-sync-alt"></i> Actualizar Datos
+            </button>
+            
+            <button class="btn btn-success" onclick="abrirGoogleSheets()">
+                <i class="fas fa-external-link-alt"></i> Abrir Google Sheets
             </button>
         </div>
         
-        <div class="error-message" id="error-message">
-            <i class="fas fa-exclamation-circle"></i>
-            <span id="error-text">Error al cargar los datos</span>
-        </div>
-        
-        <div class="filters">
-            <div class="filter-group">
-                <label for="estado"><i class="fas fa-filter"></i> Estado</label>
-                <select id="estado">
-                    <option value="">Todos los estados</option>
-                    <option value="pagada">Pagada</option>
-                    <option value="pendiente">Pendiente</option>
-                    <option value="vencida">Vencida</option>
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label for="mes"><i class="fas fa-calendar"></i> Mes</label>
-                <select id="mes">
-                    <option value="">Todos los meses</option>
-                    <option value="1">Enero</option>
-                    <option value="2">Febrero</option>
-                    <option value="3">Marzo</option>
-                    <option value="4">Abril</option>
-                    <option value="5">Mayo</option>
-                    <option value="6">Junio</option>
-                    <option value="7">Julio</option>
-                    <option value="8">Agosto</option>
-                    <option value="9">Septiembre</option>
-                    <option value="10">Octubre</option>
-                    <option value="11">Noviembre</option>
-                    <option value="12">Diciembre</option>
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label for="year"><i class="fas fa-calendar-alt"></i> Año</label>
-                <select id="year">
-                    <option value="">Todos los años</option>
-                    <option value="2023">2023</option>
-                    <option value="2024">2024</option>
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label for="busqueda"><i class="fas fa-search"></i> Búsqueda</label>
-                <input type="text" id="busqueda" placeholder="Número de factura o cliente">
-            </div>
-        </div>
-        
-        <div class="stats-cards">
+        <div class="stats">
             <div class="stat-card">
                 <div class="stat-number" id="total-facturado">$0</div>
                 <div class="stat-label">Total Facturado</div>
             </div>
             
             <div class="stat-card">
+                <div class="stat-number" id="total-facturas">0</div>
+                <div class="stat-label">Total Facturas</div>
+            </div>
+            
+            <div class="stat-card">
                 <div class="stat-number" id="facturas-pendientes">0</div>
-                <div class="stat-label">Facturas Pendientes</div>
+                <div class="stat-label">Pendientes</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-number" id="por-cobrar">$0</div>
-                <div class="stat-label">Por Cobrar</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-number" id="tasa-cobro">0%</div>
-                <div class="stat-label">Tasa de Cobro</div>
+                <div class="stat-number" id="facturas-pagadas">0</div>
+                <div class="stat-label">Pagadas</div>
             </div>
         </div>
         
-        <div class="table-container">
-            <div id="tabla-loading" class="loading">
-                <div class="spinner"></div>
-                <p>Cargando datos desde Google Sheets...</p>
-            </div>
-            <table id="tabla-facturas" style="display: none;">
+        <div id="tabla-container">
+            <table>
                 <thead>
                     <tr>
                         <th>Número</th>
-                        <th>Fecha Emisión</th>
+                        <th>Fecha</th>
                         <th>Cliente</th>
                         <th>Descripción</th>
                         <th>Monto</th>
                         <th>Estado</th>
                         <th>Vencimiento</th>
-                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="facturas-body">
-                    <!-- Los datos se cargarán dinámicamente -->
+                    <!-- Los datos se cargarán aquí -->
                 </tbody>
             </table>
-        </div>
-        
-        <div class="pagination" id="pagination">
-            <button class="page-btn active">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn">3</button>
-            <button class="page-btn">...</button>
-            <button class="page-btn">10</button>
         </div>
     </div>
 
     <script>
-        // ID de tu Google Sheets (extraído de la URL)
-        const SHEET_ID = '14_cm-zk1qrzE3K8pfvRamHGAi-uD8HH9bd8BMdFpZoM';
-        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+        // URL de TU Google Sheets (pública)
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRBrazhlZ91OI-rcjqCCefnYmrOKm-pnqVqTGYhl1r_VnjS3u1PzdhnMT2GEKo0QPMXxXY84hcb_Eno/pub?output=csv';
         
-        // Datos de ejemplo por si falla la carga
-        const facturasEjemplo = [
-            {
-                id: 1,
-                numero: "F-2023-00125",
-                fechaEmision: "2023-08-15",
-                cliente: "Corporación ABC S.A.",
-                descripcion: "Servicios de consultoría Q3",
-                monto: 4500.00,
-                estado: "pagada",
-                vencimiento: "2023-09-15"
-            },
-            {
-                id: 2,
-                numero: "F-2023-00136",
-                fechaEmision: "2023-09-01",
-                cliente: "Empresa XYZ Ltda.",
-                descripcion: "Licencias software empresarial",
-                monto: 8750.00,
-                estado: "pendiente",
-                vencimiento: "2023-10-01"
-            }
-        ];
-
-        // Función para formatear fecha
-        function formatearFecha(fechaStr) {
-            if (!fechaStr) return '-';
-            // Intentar parsear la fecha
-            const fecha = new Date(fechaStr);
-            if (isNaN(fecha.getTime())) return fechaStr;
-            
-            return fecha.toLocaleDateString('es-ES');
-        }
-
-        // Función para formatear moneda
-        function formatearMoneda(monto) {
-            if (isNaN(monto)) return '$0.00';
-            return new Intl.NumberFormat('es-ES', {
-                style: 'currency',
-                currency: 'USD'
-            }).format(monto);
-        }
-
         // Función para cargar facturas desde Google Sheets
         async function cargarFacturas() {
-            mostrarLoading();
-            ocultarError();
+            actualizarEstado('loading', 'Conectando con Google Sheets...');
             
             try {
                 const response = await fetch(SHEET_URL);
                 if (!response.ok) throw new Error('Error al cargar los datos');
                 
-                const text = await response.text();
-                const json = JSON.parse(text.substring(47).slice(0, -2));
+                const csvData = await response.text();
+                const facturas = parsearCSV(csvData);
                 
-                const facturas = json.table.rows.map((row, index) => {
-                    const cells = row.c;
-                    return {
-                        id: index + 1,
-                        numero: cells[0]?.v || '',
-                        fechaEmision: cells[1]?.v || '',
-                        cliente: cells[2]?.v || '',
-                        descripcion: cells[3]?.v || '',
-                        monto: cells[4]?.v || 0,
-                        estado: (cells[5]?.v || 'pendiente').toLowerCase(),
-                        vencimiento: cells[6]?.v || ''
-                    };
-                });
+                mostrarFacturas(facturas);
+                actualizarEstadisticas(facturas);
+                actualizarEstado('success', `Datos cargados correctamente (${facturas.length} facturas)`);
                 
-                // Filtrar filas vacías
-                const facturasFiltradas = facturas.filter(f => f.numero !== '');
-                
-                mostrarFacturas(facturasFiltradas);
-                actualizarUltimaActualizacion();
             } catch (error) {
-                console.error('Error cargando desde Sheets:', error);
-                mostrarError('Error al conectar con Google Sheets. Mostrando datos de ejemplo.');
-                // Mostrar datos de ejemplo como respaldo
-                mostrarFacturas(facturasEjemplo);
+                console.error('Error:', error);
+                actualizarEstado('error', 'Error al conectar con Google Sheets. Verifica la conexión.');
             }
         }
-
+        
+        // Función para parsear CSV
+        function parsearCSV(csv) {
+            const lineas = csv.split('\n');
+            const facturas = [];
+            
+            // Empezar desde 1 para saltar los encabezados
+            for (let i = 1; i < lineas.length; i++) {
+                const cells = lineas[i].split(',');
+                if (cells.length >= 7) {
+                    facturas.push({
+                        numero: cells[0]?.trim() || '',
+                        fecha: cells[1]?.trim() || '',
+                        cliente: cells[2]?.trim() || '',
+                        descripcion: cells[3]?.trim() || '',
+                        monto: parseFloat(cells[4]?.trim()) || 0,
+                        estado: (cells[5]?.trim() || 'pendiente').toLowerCase(),
+                        vencimiento: cells[6]?.trim() || ''
+                    });
+                }
+            }
+            
+            return facturas.filter(f => f.numero); // Filtrar filas vacías
+        }
+        
         // Función para mostrar facturas en la tabla
         function mostrarFacturas(facturas) {
             const tbody = document.getElementById('facturas-body');
@@ -579,108 +283,71 @@
             if (facturas.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 2rem; color: #666;">
-                            <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <td colspan="7" style="text-align: center; padding: 2rem; color: #666;">
+                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem;"></i>
                             <p>No se encontraron facturas</p>
                         </td>
                     </tr>
                 `;
-            } else {
-                facturas.forEach(factura => {
-                    const fila = document.createElement('tr');
-                    
-                    fila.innerHTML = `
-                        <td>${factura.numero}</td>
-                        <td>${formatearFecha(factura.fechaEmision)}</td>
-                        <td>${factura.cliente}</td>
-                        <td>${factura.descripcion}</td>
-                        <td>${formatearMoneda(factura.monto)}</td>
-                        <td><span class="estado ${factura.estado}">${factura.estado.charAt(0).toUpperCase() + factura.estado.slice(1)}</span></td>
-                        <td>${formatearFecha(factura.vencimiento)}</td>
-                        <td class="acciones">
-                            <button class="btn btn-primary" onclick="verFactura(${factura.id})"><i class="fas fa-eye"></i> Ver</button>
-                            <button class="btn btn-secondary" onclick="descargarPDF(${factura.id})"><i class="fas fa-download"></i> PDF</button>
-                        </td>
-                    `;
-                    
-                    tbody.appendChild(fila);
-                });
+                return;
             }
             
-            // Actualizar estadísticas
-            actualizarEstadisticas(facturas);
-            
-            // Ocultar loading y mostrar tabla
-            ocultarLoading();
+            facturas.forEach(factura => {
+                const fila = document.createElement('tr');
+                
+                fila.innerHTML = `
+                    <td>${factura.numero}</td>
+                    <td>${formatearFecha(factura.fecha)}</td>
+                    <td>${factura.cliente}</td>
+                    <td>${factura.descripcion}</td>
+                    <td>${formatearMoneda(factura.monto)}</td>
+                    <td><span class="estado ${factura.estado}">${factura.estado.toUpperCase()}</span></td>
+                    <td>${formatearFecha(factura.vencimiento)}</td>
+                `;
+                
+                tbody.appendChild(fila);
+            });
         }
-
+        
         // Función para actualizar estadísticas
         function actualizarEstadisticas(facturas) {
-            const totalFacturado = facturas.reduce((sum, factura) => sum + (Number(factura.monto) || 0), 0);
-            const facturasPendientes = facturas.filter(f => f.estado === 'pendiente').length;
-            const porCobrar = facturas.filter(f => f.estado === 'pendiente')
-                                     .reduce((sum, factura) => sum + (Number(factura.monto) || 0), 0);
-            const facturasPagadas = facturas.filter(f => f.estado === 'pagada').length;
-            const tasaCobro = facturas.length > 0 ? Math.round((facturasPagadas / facturas.length) * 100) : 0;
+            const totalFacturado = facturas.reduce((sum, f) => sum + f.monto, 0);
+            const pendientes = facturas.filter(f => f.estado === 'pendiente').length;
+            const pagadas = facturas.filter(f => f.estado === 'pagada').length;
             
             document.getElementById('total-facturado').textContent = formatearMoneda(totalFacturado);
-            document.getElementById('facturas-pendientes').textContent = facturasPendientes;
-            document.getElementById('por-cobrar').textContent = formatearMoneda(porCobrar);
-            document.getElementById('tasa-cobro').textContent = `${tasaCobro}%`;
-        }
-
-        // Funciones de UI
-        function mostrarLoading() {
-            document.getElementById('tabla-loading').style.display = 'flex';
-            document.getElementById('tabla-facturas').style.display = 'none';
+            document.getElementById('total-facturas').textContent = facturas.length;
+            document.getElementById('facturas-pendientes').textContent = pendientes;
+            document.getElementById('facturas-pagadas').textContent = pagadas;
         }
         
-        function ocultarLoading() {
-            document.getElementById('tabla-loading').style.display = 'none';
-            document.getElementById('tabla-facturas').style.display = 'table';
+        // Funciones de utilidad
+        function formatearFecha(fechaStr) {
+            if (!fechaStr) return '-';
+            return fechaStr;
         }
         
-        function mostrarError(mensaje) {
-            document.getElementById('error-text').textContent = mensaje;
-            document.getElementById('error-message').style.display = 'block';
+        function formatearMoneda(monto) {
+            return new Intl.NumberFormat('es-ES', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(monto);
         }
         
-        function ocultarError() {
-            document.getElementById('error-message').style.display = 'none';
+        function actualizarEstado(tipo, mensaje) {
+            const status = document.getElementById('status');
+            status.className = `status ${tipo}`;
+            status.innerHTML = tipo === 'loading' 
+                ? `<i class="fas fa-spinner fa-spin"></i> ${mensaje}`
+                : mensaje;
         }
         
-        function actualizarUltimaActualizacion() {
-            const ahora = new Date();
-            document.getElementById('last-update').textContent = 
-                `Última actualización: ${ahora.toLocaleTimeString('es-ES')}`;
+        function abrirGoogleSheets() {
+            window.open('https://docs.google.com/spreadsheets/d/14_cm-zk1qrzE3K8pfvRamHGAi-uD8HH9bd8BMdFpZoM/edit', '_blank');
         }
-
-        // Funciones de acciones
-        function verFactura(id) {
-            alert(`Funcionalidad de ver factura #${id} se activará pronto`);
-        }
-
-        function descargarPDF(id) {
-            alert(`Funcionalidad de descargar PDF #${id} se activará pronto`);
-        }
-
+        
         // Cargar datos al iniciar
-        document.addEventListener('DOMContentLoaded', function() {
-            cargarFacturas();
-            
-            // Configurar event listeners para filtros
-            const filtros = document.querySelectorAll('.filters select, .filters input');
-            filtros.forEach(filtro => {
-                filtro.addEventListener('change', function() {
-                    // Aquí iría la lógica de filtrado
-                    console.log('Filtrando por:', this.id, this.value);
-                });
-            });
-            
-            document.getElementById('busqueda').addEventListener('input', function() {
-                console.log('Buscando:', this.value);
-            });
-        });
+        document.addEventListener('DOMContentLoaded', cargarFacturas);
     </script>
 </body>
 </html>
