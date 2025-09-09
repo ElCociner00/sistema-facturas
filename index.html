@@ -6,6 +6,7 @@
     <title>Sistema de Facturas - Agrupado</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ESTILOS DEL LOGIN */
         :root {
             --color-primary: #2c3e50;
             --color-secondary: #3498db;
@@ -14,6 +15,114 @@
             --color-danger: #e74c3c;
         }
         
+        .login-screen {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10000;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+        }
+        
+        .login-title {
+            color: var(--color-primary);
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--color-secondary);
+        }
+        
+        .btn-login {
+            width: 100%;
+            background: var(--color-secondary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-login:hover {
+            background: #2980b9;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            display: none;
+        }
+
+        /* BARRA DE USUARIO */
+        .user-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+        }
+        
+        /* ESTILOS ORIGINALES DEL SISTEMA DE FACTURAS */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -181,6 +290,46 @@
     </style>
 </head>
 <body>
+    <!-- PANTALLA DE LOGIN (visible inicialmente) -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="logo">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+            
+            <h1 class="login-title">Acceso Empleados</h1>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username"><i class="fas fa-user"></i> Usuario</label>
+                    <input type="text" id="username" placeholder="Ingresa tu usuario" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Contraseña</label>
+                    <input type="password" id="password" placeholder="Ingresa tu contraseña" required>
+                </div>
+                
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                </button>
+            </form>
+            
+            <div id="loginError" class="error-message">
+                <i class="fas fa-exclamation-circle"></i> Usuario o contraseña incorrectos
+            </div>
+        </div>
+    </div>
+
+    <!-- BARRA DE USUARIO -->
+    <div id="userBar" class="user-bar">
+        <span style="margin-right: 10px;">👤 Usuario: <span id="nombreUsuario">Invitado</span></span>
+        <button onclick="logout()" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
+            <i class="fas fa-sign-out-alt"></i> Salir
+        </button>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL DEL SISTEMA DE FACTURAS -->
     <div class="container">
         <header>
             <h1><i class="fas fa-file-invoice-dollar"></i> Sistema de Facturas</h1>
@@ -239,11 +388,80 @@
     </div>
 
     <script>
+        // ==============================================
+        // SISTEMA DE LOGIN
+        // ==============================================
+        const usuariosAutorizados = {
+            'admin': 'admin123',
+            'contabilidad': 'contabilidad2024', 
+            'gerente': 'gerente123',
+            'empleado': 'password123'
+        };
+
+        function checkAuth() {
+            const usuario = localStorage.getItem('usuarioLogueado');
+            if (usuario) {
+                // Usuario logueado - ocultar login, mostrar contenido
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('userBar').style.display = 'flex';
+                document.getElementById('nombreUsuario').textContent = usuario;
+                
+                // Cargar facturas solo si está autenticado
+                cargarFacturas();
+            } else {
+                // No logueado - mostrar login
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('userBar').style.display = 'none';
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginError = document.getElementById('loginError');
+            
+            if (usuariosAutorizados[username] === password) {
+                // Login exitoso
+                localStorage.setItem('usuarioLogueado', username);
+                checkAuth();
+            } else {
+                // Login fallido
+                loginError.style.display = 'block';
+                setTimeout(() => {
+                    loginError.style.display = 'none';
+                }, 3000);
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('usuarioLogueado');
+            checkAuth();
+            
+            // Limpiar la tabla de facturas
+            document.getElementById('facturas-body').innerHTML = '';
+            document.getElementById('status').className = 'status loading';
+            document.getElementById('status').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando y agrupando facturas...';
+            
+            // Reiniciar estadísticas
+            document.getElementById('total-facturas').textContent = '0';
+            document.getElementById('total-facturado').textContent = '$0';
+            document.getElementById('facturas-pendientes').textContent = '0';
+            document.getElementById('facturas-pagadas').textContent = '0';
+        }
+
+        // ==============================================
+        // SISTEMA DE FACTURAS (CÓDIGO ORIGINAL)
+        // ==============================================
         // URL de TU Google Sheets
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRBrazhlZ91OI-rcjqCCefnYmrOKm-pnqVqTGYhl1r_VnjS3u1PzdhnMT2GEKo0QPMXxXY84hcb_Eno/pub?output=csv';
         
         // Función para cargar y agrupar facturas
         async function cargarFacturas() {
+            // Solo cargar si está autenticado
+            if (!localStorage.getItem('usuarioLogueado')) return;
+            
             actualizarEstado('loading', 'Cargando y agrupando facturas...');
             
             try {
@@ -321,7 +539,8 @@
                         email: fila.email,
                         total: fila.totalFactura,
                         items: [],
-                        estado: determinarEstado(fila)
+                        estado: determinarEstado(fila),
+                        fecha: new Date().toLocaleDateString('es-CO') // FECHA AUTOMÁTICA
                     });
                 }
                 
@@ -375,7 +594,7 @@
                 filaPrincipal.innerHTML = `
                     <td><strong>${factura.numero}</strong></td>
                     <td>${factura.proveedor}</td>
-                    <td>${obtenerFechaFactura(factura)}</td>
+                    <td>${factura.fecha}</td>
                     <td>${formatearMoneda(factura.total)}</td>
                     <td><span class="estado ${factura.estado}">${factura.estado.toUpperCase()}</span></td>
                     <td>
@@ -427,12 +646,6 @@
             });
         }
         
-        // Función para obtener fecha de la factura (puedes ajustar según tus datos)
-        function obtenerFechaFactura(factura) {
-            // Aquí puedes implementar lógica para extraer la fecha si está disponible
-            return 'Fecha no disponible';
-        }
-        
         // Función para actualizar estadísticas
         function actualizarEstadisticas(facturas) {
             const totalFacturado = facturas.reduce((sum, f) => sum + f.total, 0);
@@ -471,8 +684,13 @@
                 : mensaje;
         }
         
-        // Cargar datos al iniciar
-        document.addEventListener('DOMContentLoaded', cargarFacturas);
+        // ==============================================
+        // INICIALIZACIÓN
+        // ==============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Primero verificar autenticación
+            checkAuth();
+        });
     </script>
 </body>
 </html>
