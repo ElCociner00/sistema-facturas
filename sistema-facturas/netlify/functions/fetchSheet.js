@@ -1,12 +1,17 @@
-// Usar ESM syntax que Netlify prefiere
-export default async (event, context) => {
+// Formato correcto para Netlify Functions
+const fetch = require('node-fetch');
+
+exports.handler = async function(event, context) {
   try {
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRBrazhlZ91OI-rcjqCCefnYmrOKm-pnqVqTGYhl1r_VnjS3u1PzdhnMT2GEKo0QPMXxXY84hcb_Eno/pub?output=csv';
     
     const response = await fetch(sheetUrl);
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({ error: 'Failed to fetch data from Google Sheets' })
+      };
     }
     
     const data = await response.text();
