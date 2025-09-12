@@ -1,8 +1,0 @@
-{
-  "name": "sistema-facturas",
-  "version": "1.0.0",
-  "description": "Sistema de gestión de facturas",
-  "dependencies": {
-    "node-fetch": "^2.6.7"
-  }
-}
