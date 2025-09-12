@@ -1,4 +1,3 @@
-// Configuración de la aplicación
 const CONFIG = {
     SHEET_URL: '/.netlify/functions/fetchSheet',
     
@@ -9,7 +8,6 @@ const CONFIG = {
         'empleado': 'password123'
     },
     
-    // Estados posibles de las facturas
     ESTADOS: {
         PAGADA: 'pagada',
         PENDIENTE: 'pendiente',
