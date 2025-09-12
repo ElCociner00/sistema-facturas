@@ -1,5 +1,5 @@
 const CONFIG = {
-    SHEET_URL: '/.netlify/functions/fetchSheet',
+    SHEET_URL: '/api/fetchSheet',
     
     usuariosAutorizados: {
         'admin': 'admin123',
