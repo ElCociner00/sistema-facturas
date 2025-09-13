@@ -18,7 +18,7 @@ function mostrarFacturasAgrupadas(facturas) {
     }
     
     facturas.forEach(factura => {
-        // Fila principal de la factura
+        // Fila principal de la factura (MEJORADA)
         const filaPrincipal = document.createElement('tr');
         filaPrincipal.className = 'factura-header';
         filaPrincipal.innerHTML = `
