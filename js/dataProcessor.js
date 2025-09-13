@@ -56,7 +56,11 @@ function agruparPorFactura(filas) {
                 total: fila.totalFactura,
                 items: [],
                 estado: determinarEstado(fila), // Estado inicial
-                fecha: obtenerFechaDesdeFactura(fila) // Nueva función para fecha
+                fecha: new Date().toLocaleDateString('es-CO', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }) // Fecha de hoy (como solicitaste)
             });
         }
         
