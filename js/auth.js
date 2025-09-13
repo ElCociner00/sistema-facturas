@@ -3,11 +3,13 @@
 // Verificar autenticación
 function checkAuth() {
     const usuario = localStorage.getItem('usuarioLogueado');
+    const rol = localStorage.getItem('usuarioRol');
+    
     if (usuario) {
         // Usuario logueado - ocultar login, mostrar contenido
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('userBar').style.display = 'flex';
-        document.getElementById('nombreUsuario').textContent = usuario;
+        document.getElementById('nombreUsuario').textContent = `${usuario} (${rol})`;
         
         // Cargar facturas solo si está autenticado
         cargarFacturas();
@@ -21,6 +23,7 @@ function checkAuth() {
 // Cerrar sesión
 function logout() {
     localStorage.removeItem('usuarioLogueado');
+    localStorage.removeItem('usuarioRol');
     checkAuth();
     limpiarTablaFacturas();
 }
@@ -35,9 +38,12 @@ function setupAuthListeners() {
         const password = document.getElementById('password').value;
         const loginError = document.getElementById('loginError');
         
-        if (CONFIG.usuariosAutorizados[username] === password) {
+        const usuario = CONFIG.usuariosAutorizados[username];
+        
+        if (usuario && usuario.password === password) {
             // Login exitoso
             localStorage.setItem('usuarioLogueado', username);
+            localStorage.setItem('usuarioRol', usuario.rol);
             checkAuth();
         } else {
             // Login fallido
