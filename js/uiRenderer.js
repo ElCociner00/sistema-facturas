@@ -26,7 +26,12 @@ function mostrarFacturasAgrupadas(facturas) {
             <td>${factura.proveedor}</td>
             <td>${factura.fecha}</td>
             <td>${formatearMoneda(factura.total)}</td>
-            <td><span class="estado ${factura.estado}">${factura.estado.toUpperCase()}</span></td>
+            <td>
+                <span class="estado ${factura.estado}">
+                    <i class="${factura.estado === CONFIG.ESTADOS.PAGADA ? 'fas fa-check-circle' : 'fas fa-clock'}"></i>
+                    ${factura.estado.toUpperCase()}
+                </span>
+            </td>
             <td>
                 <span class="toggle-details" onclick="toggleDetalles('${factura.numero}')">
                     <i class="fas fa-chevron-down"></i> Ver detalles (${factura.items.length} items)
