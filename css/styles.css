@@ -279,3 +279,38 @@ tr.factura-detail.show {
     padding: 40px;
     color: #666;
 }
+/* ===== MEJORAS PARA ESTADOS - AGREGAR AL FINAL ===== */
+
+/* Mejores estilos para estados */
+.estado {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.pagada { 
+    background: #e8f5e9; 
+    color: #27ae60;
+    border: 1px solid #c8e6c9;
+}
+
+.pendiente { 
+    background: #fff3e0; 
+    color: #f39c12;
+    border: 1px solid #ffe0b2;
+}
+
+.vencida { 
+    background: #ffebee; 
+    color: #e74c3c;
+    border: 1px solid #ffcdd2;
+}
+
+/* Iconos para estados */
+.estado i {
+    font-size: 0.8rem;
+}
