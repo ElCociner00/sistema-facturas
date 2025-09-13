@@ -3,13 +3,19 @@ const CONFIG = {
     SHEET_URL: '/.netlify/functions/fetchSheet',
     
     usuariosAutorizados: {
-        'admin': 'admin123',
-        'contabilidad': 'contabilidad2024', 
-        'gerente': 'gerente123',
-        'empleado': 'password123'
+        'admin': { password: 'admin123', rol: 'administrador' },
+        'contabilidad': { password: 'contabilidad2024', rol: 'contador' },
+        'gerente': { password: 'gerente123', rol: 'gerente' },
+        'empleado': { password: 'password123', rol: 'empleado' }
     },
     
-    // Estados posibles de las facturas
+    ROLES: {
+        ADMIN: 'administrador',
+        CONTADOR: 'contador', 
+        GERENTE: 'gerente',
+        EMPLEADO: 'empleado'
+    },
+    
     ESTADOS: {
         PAGADA: 'pagada',
         PENDIENTE: 'pendiente',
