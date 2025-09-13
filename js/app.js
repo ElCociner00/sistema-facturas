@@ -1,6 +1,6 @@
 // Aplicación principal - Punto de entrada
 
-// Función para cargar y agrupar facturas
+// Función para cargar y agrupar facturas (VERSIÓN CORREGIDA)
 async function cargarFacturas() {
     // Solo cargar si está autenticado
     if (!localStorage.getItem('usuarioLogueado')) return;
@@ -16,6 +16,10 @@ async function cargarFacturas() {
         
         // Agrupar por número de factura
         const facturasAgrupadas = agruparPorFactura(filas);
+        
+        // LIMPIAR antes de mostrar (evita duplicación) - CORRECCIÓN AGREGADA
+        const tbody = document.getElementById('facturas-body');
+        tbody.innerHTML = '';
         
         mostrarFacturasAgrupadas(facturasAgrupadas);
         actualizarEstadisticas(facturasAgrupadas);
