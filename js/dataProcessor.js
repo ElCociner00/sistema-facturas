@@ -40,7 +40,7 @@ function parsearCSV(csv) {
     return filas;
 }
 
-// Función para agrupar por número de factura
+// Función para agrupar por número de factura (MEJORADA)
 function agruparPorFactura(filas) {
     const facturasMap = new Map();
     
@@ -55,8 +55,8 @@ function agruparPorFactura(filas) {
                 email: fila.email,
                 total: fila.totalFactura,
                 items: [],
-                estado: determinarEstado(fila),
-                fecha: obtenerFechaFormateada()
+                estado: determinarEstado(fila), // Estado inicial
+                fecha: obtenerFechaDesdeFactura(fila) // Nueva función para fecha
             });
         }
         
@@ -74,15 +74,46 @@ function agruparPorFactura(filas) {
         if (fila.totalFactura > factura.total) {
             factura.total = fila.totalFactura;
         }
+        
+        // Actualizar estado si encontramos uno más específico
+        const nuevoEstado = determinarEstado(fila);
+        if (nuevoEstado === CONFIG.ESTADOS.PAGADA) {
+            factura.estado = CONFIG.ESTADOS.PAGADA;
+        }
     });
     
     return Array.from(facturasMap.values());
 }
 
-// Función para determinar el estado de la factura
+// Función para determinar el estado de la factura (MEJORADA)
 function determinarEstado(fila) {
-    if (fila.valorCredito > 0) return CONFIG.ESTADOS.PAGADA;
-    if (fila.descripcion?.toLowerCase().includes('crédito')) return CONFIG.ESTADOS.PAGADA;
+    // 1. Si tiene valor crédito > 0, está pagada
+    if (fila.valorCredito > 0) {
+        return CONFIG.ESTADOS.PAGADA;
+    }
+    
+    // 2. Si la descripción indica crédito o pago
+    const descripcion = fila.descripcion?.toLowerCase() || '';
+    if (descripcion.includes('crédito') || 
+        descripcion.includes('credito') || 
+        descripcion.includes('pago') ||
+        descripcion.includes('cancelado') ||
+        descripcion.includes('pagado')) {
+        return CONFIG.ESTADOS.PAGADA;
+    }
+    
+    // 3. Si tiene valor débito > 0 pero no tiene crédito, está pendiente
+    if (fila.valorDebito > 0 && fila.valorCredito === 0) {
+        return CONFIG.ESTADOS.PENDIENTE;
+    }
+    
+    // 4. Si el código contable indica un estado específico
+    const codigoContable = fila.codigoContable?.toString() || '';
+    if (codigoContable.includes('PAG') || codigoContable.includes('LIQ')) {
+        return CONFIG.ESTADOS.PAGADA;
+    }
+    
+    // 5. Por defecto, considerar como pendiente
     return CONFIG.ESTADOS.PENDIENTE;
 }
 
